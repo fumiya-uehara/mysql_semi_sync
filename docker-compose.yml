@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  source:
+    build: ./source
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sync_db
+      MYSQL_USER: repl
+      MYSQL_PASSWORD: "Gxy6UEK!nDBV7Wu"
+    networks:
+      mysql_semi_sync:
+        ipv4_address: 192.168.200.110
+    volumes:
+      - ./source/init.d:/docker-entrypoint-initdb.d
+      - shared_dir:/share:rw
+
+  replica:
+    build: ./replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      mysql_semi_sync:
+        ipv4_address: 192.168.200.120
+    volumes:
+      - ./replica/init.d:/docker-entrypoint-initdb.d
+      - shared_dir:/share:ro
+    depends_on:
+      - source
+
+networks:
+  mysql_semi_sync:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.200.0/24
+
+volumes:
+  shared_dir:
